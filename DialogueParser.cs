@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
-using Unity.Android.Gradle;
 
 namespace DialogueSystem
 {
@@ -32,7 +31,8 @@ namespace DialogueSystem
         private DialogueBlock ParseBlock(XElement element, out int id)
         {
             var strId   = element.Attribute("id").Value;
-            string text = element.Element("text").Value;
+            string text = element.Element("text")?.Value;
+            text = text == null ? "No data" : text;
 
             id          = int.Parse(strId);
             var choices = ParseChoices(element.Elements()
