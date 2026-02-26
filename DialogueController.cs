@@ -15,14 +15,16 @@ namespace DialogueSystem
         private Action _onComplite;
 
         public DialogueController(IGameActions actions, IGameConditions conditions, 
-                                  IDialogueView view)
+                                  IDialogueView view, IDialogueInputManager input)
         {
             _actions    = actions;
             _conditions = conditions;
             _view       = view;
+
+            input.MakeChoiceCallback += MakeChoice;
         }
 
-        public void StartDialog(Dialog dialog, Action onComplite)
+        public void StartDialog(Dialog dialog, Action onComplite = null)
         {
             _currentDialog  = dialog;
             _onComplite     = onComplite;
@@ -42,7 +44,7 @@ namespace DialogueSystem
 
         private void SetBlock(int id) => SetBlock(_currentDialog.GetNext(id));
 
-        public void MakeChoice(int index)
+        private void MakeChoice(int index)
         {
             var choice = _currentBlock.Choices.ElementAt(index);
             int nextId = choice.NextId;
