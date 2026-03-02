@@ -30,8 +30,9 @@ namespace DialogueSystem
 
         private DialogueBlock ParseBlock(XElement element, out int id)
         {
-            var strId   = element.Attribute("id").Value;
-            string text = element.Element("text")?.Value;
+            var strId       = element.Attribute("id").Value;
+            var text        = element.Element("text")?.Value;
+
             text = text == null ? "No data" : text;
 
             id          = int.Parse(strId);
@@ -39,7 +40,9 @@ namespace DialogueSystem
                                               .Where(element => element.Name == "choice" 
                                                              || element.Name == "union"));
 
-            return new(text, choices);
+            var action = ParseAction(element);
+
+            return new(text, choices, action);
         }
 
         private IEnumerable<Choice> ParseChoices(IEnumerable<XElement> elements)
@@ -102,31 +105,27 @@ namespace DialogueSystem
         private void ParseFunctions(XElement rootElement, out DialogueAction action, 
                                                           out DialogueCondition condition)
         {
-            string actionStr    = rootElement.Element("action")?.Value;
-            string conditionStr = rootElement.Element("condition")?.Value;
-
-            action      = ParseAction(actionStr);
-            condition   = ParseCondition(conditionStr);
+            action      = ParseAction(rootElement);
+            condition   = ParseCondition(rootElement);
         }
 
-        private DialogueAction ParseAction(string str)
+        private DialogueAction ParseAction(XElement rootElement) 
+            => ParseFunctionSafe(rootElement, "action", (name, args) => new DialogueAction(name, args));
+
+        private DialogueCondition ParseCondition(XElement rootElement) 
+            => ParseFunctionSafe(rootElement, "condition", (name, args) => new DialogueCondition(name, args));
+
+        private T ParseFunctionSafe<T>(XElement element, string elementKey, 
+                                       Func<string, string[], T> createFunc) where T : DialogueFunction
         {
+            string str = element.Element(elementKey)?.Value;
+
             if (str == null)
                 return null;
 
             ParseFunction(str, out var name, out var args);
 
-            return new(name, args);
-        }
-
-        private DialogueCondition ParseCondition(string str)
-        {
-            if (str == null)
-                return null;
-
-            ParseFunction(str, out var name, out var args);
-
-            return new(name, args);
+            return createFunc(name, args);
         }
 
         private void ParseFunction(string rawString, out string name, out string[] args)

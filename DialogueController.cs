@@ -35,6 +35,7 @@ namespace DialogueSystem
         private void SetBlock(DialogueBlock block)
         {
             _currentBlock = block;
+            _currentBlock.Action.Invoke(_actions);
 
             _view.ShowText(_currentBlock.Text);
             _view.ShowChoices(_currentBlock.Choices
